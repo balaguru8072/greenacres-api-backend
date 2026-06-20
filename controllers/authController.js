@@ -1,7 +1,7 @@
 const Admin = require("../models/Admin");
 const generateToken = require("../utils/generateToken");
 
-// Register admin
+// Register Admin
 const registerAdmin = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -22,7 +22,7 @@ const registerAdmin = async (req, res) => {
       role: "admin",
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: "Admin registered successfully",
       admin: {
@@ -33,14 +33,14 @@ const registerAdmin = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-// Login admin
+// Login Admin
 const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -74,15 +74,21 @@ const loginAdmin = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: Number(process.env.COOKIE_EXPIRE) * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+      sameSite:
+        process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge:
+        Number(process.env.COOKIE_EXPIRE || 7) *
+        24 *
+        60 *
+        60 *
+        1000,
+      path: "/",
     });
 
     return res.status(200).json({
       success: true,
       message: "Login successfully",
-      token,
       admin: {
         id: admin._id,
         name: admin.name,
@@ -98,15 +104,16 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-// Logout admin
+// Logout Admin
 const logoutAdmin = async (req, res) => {
   try {
     res.cookie("token", "", {
       httpOnly: true,
       expires: new Date(0),
-      path: "/",           // ✅ must match the path used when setting the cookie
-      secure: process.env.NODE_ENV === "production", // ✅ https only in production
-      sameSite: "strict",  // ✅ CSRF protection
+      secure: process.env.NODE_ENV === "production",
+      sameSite:
+        process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
     });
 
     return res.status(200).json({
@@ -121,10 +128,17 @@ const logoutAdmin = async (req, res) => {
   }
 };
 
-// Get current admin
+// Profile
 const getAdminProfile = async (req, res) => {
   try {
     const admin = await Admin.findById(req.user._id);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
 
     return res.status(200).json({
       success: true,
