@@ -41,6 +41,7 @@ const registerAdmin = async (req, res) => {
 };
 
 // Login Admin
+// Login Admin
 const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -72,16 +73,23 @@ const loginAdmin = async (req, res) => {
 
     const token = generateToken(admin._id);
 
+    // ✅ Localhost la irundhu vandha secure: false, sameSite: lax
+    const isProduction = process.env.NODE_ENV === "production";
+    const origin = req.headers.origin || "";
+    const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
+
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // ← false aagudhu ippo
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // ← "lax" aagudhu
+      secure: isProduction && !isLocalhost, // localhost la false
+      sameSite: isProduction && !isLocalhost ? "none" : "lax", // localhost la lax
       maxAge: Number(process.env.COOKIE_EXPIRE || 7) * 24 * 60 * 60 * 1000,
       path: "/",
     });
+
     return res.status(200).json({
       success: true,
       message: "Login successfully",
+      token, // ✅ Local dev ku token anuppu
       admin: {
         id: admin._id,
         name: admin.name,
@@ -97,15 +105,19 @@ const loginAdmin = async (req, res) => {
   }
 };
 
+
 // Logout Admin
 const logoutAdmin = async (req, res) => {
   try {
+    const isProduction = process.env.NODE_ENV === "production";
+    const origin = req.headers.origin || "";
+    const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
+
     res.cookie("token", "", {
       httpOnly: true,
       expires: new Date(0),
-      secure: process.env.NODE_ENV === "production",
-      sameSite:
-        process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: isProduction && !isLocalhost,
+      sameSite: isProduction && !isLocalhost ? "none" : "lax",
       path: "/",
     });
 
@@ -120,6 +132,7 @@ const logoutAdmin = async (req, res) => {
     });
   }
 };
+
 
 // Profile
 const getAdminProfile = async (req, res) => {
