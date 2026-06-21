@@ -2,6 +2,8 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 // REGISTER USER
 const registerUser = async (req, res) => {
   try {
