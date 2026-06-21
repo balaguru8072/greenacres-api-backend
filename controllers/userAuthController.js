@@ -94,6 +94,9 @@ const loginUser = async (req, res) => {
 
     const token = generateToken(user._id);
 
+    console.log("BEFORE COOKIE - NODE_ENV:", process.env.NODE_ENV); // ✅ Idhu
+    console.log("BEFORE COOKIE - isProduction:", isProduction); // ✅ Idhu
+
     // ✅ Admin maariye same config - Idhu dhaan mukkiyam
     res.cookie("userToken", token, {
       httpOnly: true,
@@ -102,6 +105,8 @@ const loginUser = async (req, res) => {
       maxAge: Number(process.env.COOKIE_EXPIRE || 7) * 24 * 60 * 60 * 1000,
       path: "/",
     });
+
+     console.log("AFTER COOKIE - Cookie sent"); // ✅ Idhu
 
     return res.status(200).json({
       success: true,
