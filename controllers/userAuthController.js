@@ -2,15 +2,17 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 // REGISTER USER
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, mobile_number } = req.body;
 
-    if (!name || !email || !password || !mobile_number) {
+    if (!name ||!email ||!password ||!mobile_number) {
       return res.status(400).json({
         success: false,
-        message: "Please enter name, email , password and mobile number",
+        message: "Please enter name, email, password and mobile number",
       });
     }
 
@@ -35,8 +37,8 @@ const registerUser = async (req, res) => {
 
     res.cookie("userToken", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: isProduction,
+      sameSite: isProduction? "none" : "lax",
       maxAge: Number(process.env.COOKIE_EXPIRE) * 24 * 60 * 60 * 1000,
     });
 
@@ -65,7 +67,7 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (!email ||!password) {
       return res.status(400).json({
         success: false,
         message: "Please enter email and password",
@@ -94,8 +96,8 @@ const loginUser = async (req, res) => {
 
     res.cookie("userToken", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: isProduction,
+      sameSite: isProduction? "none" : "lax",
       maxAge: Number(process.env.COOKIE_EXPIRE) * 24 * 60 * 60 * 1000,
     });
 
@@ -125,8 +127,8 @@ const logoutUser = async (req, res) => {
       httpOnly: true,
       expires: new Date(0),
       path: "/",
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: isProduction,
+      sameSite: isProduction? "none" : "lax",
     });
 
     return res.status(200).json({
@@ -193,9 +195,9 @@ const forgotPassword = async (req, res) => {
     const resetToken = crypto.randomBytes(32).toString("hex");
 
     user.resetPasswordToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
+     .createHash("sha256")
+     .update(resetToken)
+     .digest("hex");
 
     user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
@@ -220,9 +222,9 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const resetPasswordToken = crypto
-      .createHash("sha256")
-      .update(req.params.token)
-      .digest("hex");
+     .createHash("sha256")
+     .update(req.params.token)
+     .digest("hex");
 
     const user = await User.findOne({
       resetPasswordToken,
