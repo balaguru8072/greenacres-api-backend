@@ -24,7 +24,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // const cors = require("cors");
 
-const allowedOrigins = process.env.FRONTEND_URL.split(",").map(o => o.trim());
+// ✅ Fix 1: FRONTEND_URL illana empty array use pannu
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(",").map(o => o.trim())
+  : ['https://greenacresdelta.com', 'https://www.greenacresdelta.com', 'http://localhost:3000'];
 
 app.use(
   cors({
@@ -56,4 +59,5 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Allowed Origins:`, allowedOrigins); // ✅ Debug ku
 });
