@@ -41,7 +41,6 @@ const registerAdmin = async (req, res) => {
 };
 
 // Login Admin
-// Login Admin
 const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -73,15 +72,12 @@ const loginAdmin = async (req, res) => {
 
     const token = generateToken(admin._id);
 
-    // ✅ Localhost la irundhu vandha secure: false, sameSite: lax
-    const isProduction = process.env.NODE_ENV === "production";
-    const origin = req.headers.origin || "";
-    const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
-
+    // ✅ CORRECT LOGIC: Backend HTTPS la irukku, so always secure: true
+    // Frontend veru domain na always sameSite: "none"
     res.cookie("token", token, {
       httpOnly: true,
-      secure: isProduction && !isLocalhost, // localhost la false
-      sameSite: isProduction && !isLocalhost ? "none" : "lax", // localhost la lax
+      secure: true, // ✅ HTTPS server, so always true
+      sameSite: "none", // ✅ Cross-site ku always 'none'
       maxAge: Number(process.env.COOKIE_EXPIRE || 7) * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -89,7 +85,7 @@ const loginAdmin = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Login successfully",
-      token, // ✅ Local dev ku token anuppu
+      token,
       admin: {
         id: admin._id,
         name: admin.name,
@@ -105,19 +101,15 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-
 // Logout Admin
 const logoutAdmin = async (req, res) => {
   try {
-    const isProduction = process.env.NODE_ENV === "production";
-    const origin = req.headers.origin || "";
-    const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
-
+    // ✅ Logout la um same config use panni clear pannanum
     res.cookie("token", "", {
       httpOnly: true,
       expires: new Date(0),
-      secure: isProduction && !isLocalhost,
-      sameSite: isProduction && !isLocalhost ? "none" : "lax",
+      secure: true, // ✅ same as login
+      sameSite: "none", // ✅ same as login
       path: "/",
     });
 
@@ -132,6 +124,7 @@ const logoutAdmin = async (req, res) => {
     });
   }
 };
+
 
 
 // Profile
